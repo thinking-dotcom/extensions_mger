@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <title>扩展管家</title>
+  <style>
+    :root {
+      --bg: #0e1014;
+      --surface: #191c23;
+      --surface-2: #22262f;
+      --line: rgba(255, 255, 255, .07);
+      --text: #eceff4;
+      --muted: #7f8797;
+      --on: #35d39a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar {
+      display: none;
+    }
+
+    body {
+      width: 560px;
+      padding: 8px 8px 26px;
+      background: radial-gradient(120% 80% at 15% 0%, #1d2432 0%, var(--bg) 60%);
+      color: var(--text);
+      font: 12px/1.35 -apple-system, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    .bar {
+      display: flex;
+      align-items: stretch;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .bar .footer {
+      flex: 2 1 0;
+      margin-top: 0;
+    }
+
+    header {
+      position: fixed;
+      left: 10px;
+      bottom: 6px;
+      z-index: 5;
+    }
+
+    #count {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    #list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      padding: 1px;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      padding: 2px 5px 2px 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .item:hover {
+      background: var(--surface-2);
+      border-color: rgba(255, 255, 255, .13);
+    }
+
+    .hit {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      padding: 2px 0 2px 3px;
+      border: 0;
+      border-radius: 999px;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .12s ease;
+    }
+
+    .hit:active {
+      transform: scale(.985);
+    }
+
+    .hit:focus-visible {
+      outline: 2px solid rgba(53, 211, 154, .45);
+      outline-offset: 2px;
+    }
+
+    .uninstall {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #a3abba;
+      opacity: .6;
+      cursor: pointer;
+      transition: opacity .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .uninstall svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .item:hover .uninstall {
+      opacity: .85;
+    }
+
+    .uninstall:hover {
+      opacity: 1;
+      color: #ff8f8f;
+      background: rgba(255, 106, 106, .16);
+    }
+
+    .uninstall:focus-visible {
+      opacity: 1;
+      outline: 2px solid rgba(255, 106, 106, .5);
+      outline-offset: 1px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      opacity: .5;
+      transition: opacity .16s ease;
+    }
+
+    .item.on .badge {
+      opacity: 1;
+    }
+
+    .name {
+      flex: 1 1 auto;
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color .16s ease;
+    }
+
+    .item.on .name {
+      color: var(--text);
+    }
+
+    .switch {
+      position: relative;
+      flex: 0 0 auto;
+      width: 32px;
+      height: 18px;
+      border-radius: 999px;
+      background: #2b3038;
+      transition: background .2s ease;
+    }
+
+    .switch i {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #5d6575;
+      transition: transform .22s cubic-bezier(.3, 1.4, .6, 1), background .2s ease;
+    }
+
+    .item.on .switch {
+      background: rgba(53, 211, 154, .2);
+    }
+
+    .item.on .switch i {
+      transform: translateX(14px);
+      background: var(--on);
+    }
+
+    .feature {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 1px 4px 1px 2px;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, transform .12s ease;
+    }
+
+    .feature:active {
+      transform: scale(.98);
+    }
+
+    .feature .badge {
+      width: 18px;
+      height: 18px;
+      font-size: 9px;
+    }
+
+    .feature .name {
+      font-size: 11px;
+    }
+
+    .feature .switch {
+      width: 28px;
+      height: 16px;
+    }
+
+    .feature .switch i {
+      width: 12px;
+      height: 12px;
+    }
+
+    .feature.on .switch i {
+      transform: translateX(12px);
+    }
+
+    .badge.emoji {
+      background: rgba(255, 255, 255, .07);
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 1;
+    }
+
+    .empty {
+      padding: 14px 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .footer {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .footer button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 3px 8px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: 0;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, transform .12s ease, opacity .16s ease;
+    }
+
+    .footer button:active:not(:disabled) {
+      transform: scale(.985);
+    }
+
+    .footer button:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+
+    #enableAll {
+      border-color: rgba(53, 211, 154, .28);
+      background: rgba(53, 211, 154, .1);
+      color: #6ee7b7;
+    }
+
+    #enableAll:hover:not(:disabled) {
+      background: rgba(53, 211, 154, .18);
+      border-color: rgba(53, 211, 154, .45);
+    }
+
+    #disableAll {
+      border-color: rgba(255, 106, 106, .28);
+      background: rgba(255, 106, 106, .12);
+      color: #ff8f8f;
+    }
+
+    #disableAll:hover:not(:disabled) {
+      background: rgba(255, 106, 106, .2);
+      border-color: rgba(255, 106, 106, .45);
+    }
+
+    .io {
+      position: fixed;
+      right: 10px;
+      bottom: 6px;
+      z-index: 5;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    #cloudToggle {
+      display: grid;
+      place-items: center;
+      padding: 2px 6px;
+      color: var(--muted);
+    }
+
+    #cloudToggle svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    #cloudToggle.on {
+      color: var(--on);
+    }
+
+    #cloudToggle.err {
+      color: #ff8f8f;
+    }
+
+    #cloudStatus {
+      margin-left: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    #cloudStatus.on {
+      color: var(--on);
+    }
+
+    #cloudStatus.err {
+      color: #ff8f8f;
+    }
+
+    .missing {
+      margin-top: 10px;
+      padding: 8px 10px 6px;
+      border: 1px solid rgba(240, 168, 60, .3);
+      border-radius: 14px;
+      background: rgba(240, 168, 60, .08);
+    }
+
+    .missing[hidden] {
+      display: none;
+    }
+
+    .missing-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .missing-title {
+      color: #f0b04a;
+      font-size: 11px;
+    }
+
+    .missing-all {
+      flex: 0 0 auto;
+      padding: 1px 6px;
+      border: 1px solid rgba(240, 168, 60, .38);
+      border-radius: 999px;
+      background: transparent;
+      color: #f0b04a;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .missing-all:hover {
+      background: rgba(240, 168, 60, .16);
+      border-color: rgba(240, 168, 60, .6);
+    }
+
+    .missing-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px 3px 6px;
+      border-radius: 8px;
+      transition: background .16s ease;
+    }
+
+    .missing-item:hover {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .missing-name {
+      flex: 1 1 auto;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .missing-act {
+      flex: 0 0 auto;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #f0b04a;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .missing-act:hover {
+      background: rgba(240, 168, 60, .18);
+    }
+
+    .missing-act.ignore {
+      color: var(--muted);
+    }
+
+    .missing-act.ignore:hover {
+      color: #ff8f8f;
+      background: rgba(255, 106, 106, .15);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+    }
+
+    header,
+    .feature,
+    #list,
+    .footer {
+      animation: rise .22s ease both;
+    }
+
+    #list {
+      animation-delay: .03s;
+    }
+
+    .footer {
+      animation-delay: .06s;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bar">
+    <div class="footer">
+      <button id="enableAll" disabled>全部开启</button>
+      <button id="disableAll" disabled>全部关闭</button>
+    </div>
+    <button class="item feature" id="keepAlive">
+      <span class="badge emoji">🎬</span>
+      <span class="name">后台持续播放</span>
+      <span class="switch"><i></i></span>
+    </button>
+  </div>
+  <header><span id="count">加载中…</span></header>
+  <div id="list"></div>
+  <div class="missing" id="missing" hidden>
+    <div class="missing-head">
+      <span class="missing-title">⚠️ <span id="missingCount"></span></span>
+      <button class="missing-all" id="installAll">全部安装 ↗</button>
+    </div>
+    <div id="missingList"></div>
+  </div>
+  <div class="io">
+    <span id="cloudToggle" title="云端同步">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M7 18h10a4 4 0 0 0 .5-7.98A6 6 0 0 0 5.6 9.2A4.4 4.4 0 0 0 7 18z" />
+        <path d="M9.5 13.5l2 2 3.5-4" />
+      </svg>
+    </span>
+    <span id="cloudStatus">未登录</span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>

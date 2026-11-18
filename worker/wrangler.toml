@@ -1,0 +1,12 @@
+name = "extension-butler-state"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+
+# 1) 先创建 KV：wrangler kv namespace create STATE
+# 2) 把输出的 id 填到下面（不要填 name）；真实 ID 只存本地 worker/mima.txt，不写入仓库
+[[kv_namespaces]]
+binding = "STATE"
+id = "<KV_NAMESPACE_ID>"
+
+# 3) TOKEN 不要写进本文件，用命令行写入密钥：
+#    wrangler secret put TOKEN

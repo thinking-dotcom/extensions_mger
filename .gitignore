@@ -1,0 +1,3 @@
+# Wrangler CLI 本地缓存（含账户信息，非项目文件）
+.wrangler/
+worker/mima.txt
